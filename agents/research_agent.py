@@ -107,7 +107,7 @@ INSIGHTS DE PÚBLICO (parágrafo único com os principais insights):
 
 def _parse_research_output(raw: str) -> tuple[list, list, str]:
     """Extrai tendências, concorrentes e insights da repsosta do LLM"""
-    lines = raw.strinp().split("\n")
+    lines = raw.strip().split("\n")
     trends, competitors, insights = [], [], ""
 
     section = None
