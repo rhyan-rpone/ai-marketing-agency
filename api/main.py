@@ -22,6 +22,9 @@ from pydantic import BaseModel, Field
 
 from graph.state import AgencyState
 from graph.workflow import agency_graph
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 # ── App ────────────────────────────────────────────────────────────────────
