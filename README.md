@@ -1,397 +1,193 @@
-# 🚀 Marketing AI Agency
+# Marketing AI Agency
 
-![Python](https://img.shields.io/badge/Python-3.11+-blue)
-![LangGraph](https://img.shields.io/badge/LangGraph-MultiAgent-green)
-![FastAPI](https://img.shields.io/badge/FastAPI-API-success)
-![Streamlit](https://img.shields.io/badge/Streamlit-UI-red)
-![Docker](https://img.shields.io/badge/Docker-Containerized-blue)
-![License](https://img.shields.io/badge/license-MIT-black)
+Aplicacao multi-agent para gerar campanhas de marketing a partir de um briefing.
+O projeto usa FastAPI, Streamlit, LangGraph, OpenAI e Tavily, e foi preparado para
+rodar de forma reproduzivel com Docker.
 
-Sistema Multi-Agente construído com LangGraph que simula um departamento completo de marketing.
+![UI home](docs/screenshots/ui-home.png)
 
-O usuário fornece um briefing e múltiplos agentes especializados colaboram para pesquisar mercado, criar estratégia, gerar copy, revisar qualidade e entregar campanhas completas.
+## Quick Start
 
----
-
-# 🎯 Problema
-
-Criar campanhas completas normalmente exige:
-
-- Pesquisa de mercado
-- Estratégia
-- Copywriting
-- Revisões
-- Aprovação
-
-Este projeto automatiza esse fluxo utilizando múltiplos agentes especializados trabalhando juntos.
-
----
-
-# ✨ Features
-
-✅ Arquitetura Multi-Agent com LangGraph
-
-✅ State Management compartilhado
-
-✅ Orquestração via grafo de estados
-
-✅ Pesquisa automática de mercado
-
-✅ Estratégia de marketing automatizada
-
-✅ Geração de copy
-
-✅ Sistema de revisão automática
-
-✅ Human-in-the-loop
-
-✅ API REST
-
-✅ Interface Web
-
-✅ Dockerizado
-
-✅ Testes automatizados
-
----
-
-# 🏗 Arquitetura
-
-```text
-                    +----------------+
-                    |    User Input  |
-                    +--------+-------+
-                             |
-                             v
-
-                  +--------------------+
-                  | Orchestrator Agent |
-                  +---------+----------+
-                            |
-                            v
-
-                    +---------------+
-                    | ResearchAgent |
-                    +-------+-------+
-                            |
-                            v
-
-                    +---------------+
-                    | StrategyAgent |
-                    +-------+-------+
-                            |
-                            v
-
-                    +----------------+
-                    | CopywriterAgent|
-                    +--------+-------+
-                             |
-                             v
-
-                     +--------------+
-                     | ReviewAgent  |
-                     +------+-------+
-                            |
-
-                 Approved? ---- NO
-                      |            ^
-                      |            |
-                     YES           |
-                      |____________|
-
-                            |
-                            v
-
-                     +--------------+
-                     | Final Output |
-                     +--------------+
-```
-
----
-
-# 📂 Estrutura do Projeto
-
-```text
-marketing-ai-agency/
-
-├── agents/
-│   ├── orchestrator.py
-│   ├── research_agent.py
-│   ├── strategy_agent.py
-│   ├── copywriter_agent.py
-│   └── review_agent.py
-
-├── graph/
-│   ├── state.py
-│   └── workflow.py
-
-├── api/
-│   └── main.py
-
-├── tools/
-
-├── ui/
-│   └── app.py
-
-├── tests/
-
-├── requirements.txt
-
-├── Dockerfile
-
-└── README.md
-```
-
----
-
-# 🧠 Tecnologias
-
-| Tecnologia | Uso |
-|----------|----------|
-| Python | Core |
-| LangGraph | Orquestração Multi-Agent |
-| LangChain | Abstrações LLM |
-| FastAPI | API |
-| Streamlit | Interface |
-| Tavily | Pesquisa |
-| Docker | Deploy |
-| Pytest | Testes |
-
----
-
-# ⚙️ Instalação
-
-Clone o projeto:
+Requisitos locais: Docker e Docker Compose.
 
 ```bash
-git clone https://github.com/SEU_USER/marketing-ai-agency.git
-
-cd marketing-ai-agency
+git clone https://github.com/rhyan-rpone/ai-marketing-agency.git
+cd ai-marketing-agency
+cp .env.example .env
+docker compose up --build
 ```
 
-Crie ambiente virtual:
+Depois de preencher as chaves no `.env`, acesse:
 
-```bash
-python -m venv venv
-```
+- API: http://localhost:8000
+- Swagger: http://localhost:8000/docs
+- UI: http://localhost:8501
+- Healthcheck da API: http://localhost:8000/health
 
-Ative:
+Sem Docker, o projeto exige Python e dependencias locais. O fluxo recomendado e
+sempre usar Docker.
 
-Windows:
+## Configuracao
 
-```bash
-venv\Scripts\activate
-```
-
-Linux/Mac:
-
-```bash
-source venv/bin/activate
-```
-
-Instale dependências:
-
-```bash
-pip install -r requirements.txt
-```
-
----
-
-# 🔑 Variáveis de Ambiente
-
-Crie:
-
-```text
-.env
-```
-
-Adicione:
+Crie o `.env` a partir do exemplo:
 
 ```env
 OPENAI_API_KEY=
-
 TAVILY_API_KEY=
+OPENAI_MODEL=gpt-4o
+API_URL=http://localhost:8000
 ```
 
----
+No Docker Compose, a UI usa `API_URL=http://api:8000`, porque ela chama a API pelo
+nome do servico dentro da rede Docker. Fora do Docker, o fallback e
+`http://localhost:8000`.
 
-# 🚀 Rodando API
+O endpoint `/health` nao exige chaves. A geracao de campanha valida
+`OPENAI_API_KEY` e `TAVILY_API_KEY` no momento da execucao e retorna uma mensagem
+clara se alguma variavel estiver ausente.
 
-```bash
-uvicorn api.main:app --reload
-```
-
-API disponível:
+## Arquitetura Docker
 
 ```text
-http://localhost:8000
+docker compose
+├── api
+│   ├── FastAPI
+│   ├── uvicorn api.main:app --host 0.0.0.0 --port 8000
+│   ├── porta 8000:8000
+│   └── healthcheck /health
+└── ui
+    ├── Streamlit
+    ├── streamlit run ui/app.py --server.address 0.0.0.0 --server.port 8501
+    ├── porta 8501:8501
+    ├── API_URL=http://api:8000
+    └── depends_on api healthy
 ```
 
-Swagger:
+Fluxo da aplicacao:
 
 ```text
-http://localhost:8000/docs
+Briefing
+  -> Research Agent
+  -> Strategy Agent
+  -> Copywriter Agent
+  -> Review Agent
+  -> Campanha final
 ```
 
----
+## Comandos Uteis
 
-# 🖥 Rodando Interface
-
-```bash
-streamlit run ui/app.py
-```
-
----
-
-# 🐳 Docker
-
-Build:
+Subir tudo:
 
 ```bash
 docker compose up --build
 ```
 
----
-
-# 📬 Exemplo de Request
-
-POST:
-
-```json
-{
-   "briefing":"Lançar marca de tênis sustentável para jovens"
-}
-```
-
-Resposta:
-
-```json
-{
-
-"research_data":{
-
-"market":"Growing",
-
-"competitors":[...]
-
-},
-
-"strategy":{
-
-"target":"18-30",
-
-"tone":"modern"
-
-},
-
-"copy":{
-
-"headline":"Move the Future",
-
-"cta":"Shop Now"
-
-}
-
-}
-```
-
----
-
-# 🔄 Workflow
-
-```text
-Briefing
-
-↓
-
-Research
-
-↓
-
-Strategy
-
-↓
-
-Copy Generation
-
-↓
-
-Review
-
-↓
-
-Approved?
-
-↓
-
-Output
-```
-
----
-
-# 🧪 Rodando Testes
+Rodar em segundo plano:
 
 ```bash
-pytest
+docker compose up --build -d
 ```
 
----
+Ver logs:
 
-# 📈 Roadmap
+```bash
+docker compose logs -f
+```
 
-- [ ] Persistent Memory
-- [ ] Redis Checkpointer
-- [ ] Multi-LLM Support
-- [ ] Campaign PDF Export
-- [ ] Metrics Dashboard
-- [ ] Observability
+Parar containers:
 
----
+```bash
+docker compose down
+```
 
-# 📸 Screenshots
+Rodar testes dentro da imagem:
 
-Adicionar:
+```bash
+docker compose run --rm api pytest tests -v
+```
 
-- Interface Streamlit
+Testar healthcheck:
 
-- Graph visualization
+```bash
+curl http://localhost:8000/health
+```
 
-- Output example
+## Estrutura
 
-- API Swagger
+```text
+agents/      Agentes de research, strategy, copywriter e review
+api/         FastAPI e endpoints
+graph/       Estado e workflow LangGraph
+ui/          Interface Streamlit
+tests/       Testes automatizados
+Dockerfile   Imagem Python 3.11 slim
+docker-compose.yml
+.env.example
+requirements.txt
+```
 
----
+## Troubleshooting
 
-# 💡 Possíveis Aplicações
+`Variaveis de ambiente obrigatorias ausentes`
 
-- Marketing Agencies
+Copie `.env.example` para `.env` e preencha `OPENAI_API_KEY` e `TAVILY_API_KEY`.
 
-- Growth Teams
+`UI nao conecta na API`
 
-- Startups
+No Docker, confirme que o servico `api` esta healthy:
 
-- Content Teams
+```bash
+docker compose ps
+docker compose logs api
+```
 
-- Digital Products
+Localmente, confirme que `API_URL` aponta para `http://localhost:8000`.
 
-- Consultants
+`Porta 8000 ou 8501 em uso`
 
----
+Pare o processo local usando a porta ou altere o mapeamento em
+`docker-compose.yml`.
 
-# 👨‍💻 Autor
+`Build lento na primeira execucao`
 
-Rhyan Pablo
+Isso e esperado. As dependencias sao instaladas uma vez e reaproveitadas pelo
+cache do Docker enquanto `requirements.txt` nao mudar.
 
-AI Engineer • Automation • Multi-Agent Systems • Applied AI
+## API
 
-LinkedIn:
+Health:
 
-[SEU LINK]
+```http
+GET /health
+```
 
----
+Gerar campanha:
 
-# ⭐ Gostou?
+```http
+POST /campaign
+Content-Type: application/json
 
-Se esse projeto foi útil:
+{
+  "briefing": "Lancar tenis sustentavel para jovens 18-30 anos. Preco: R$350."
+}
+```
 
-Star ⭐ no repositório
+Streaming:
+
+```http
+POST /campaign/stream
+Accept: text/event-stream
+```
+
+## Portabilidade Final
+
+O fluxo esperado para qualquer ambiente e:
+
+```bash
+git clone https://github.com/rhyan-rpone/ai-marketing-agency.git
+cd ai-marketing-agency
+cp .env.example .env
+docker compose up --build
+```
+
+Nao e necessario instalar Python, Pip, Venv ou dependencias no host.

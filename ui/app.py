@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from html import escape
 from typing import Any
@@ -7,7 +8,7 @@ import httpx
 import streamlit as st
 
 
-API_URL = "http://localhost:8000"
+API_URL = os.getenv("API_URL", "http://localhost:8000")
 REQUEST_TIMEOUT = 120
 SAMPLE_BRIEFING = (
     "Lancar uma linha de cosmeticos veganos para mulheres de 25 a 40 anos "
@@ -659,7 +660,7 @@ def main() -> None:
             status.empty()
             progress.empty()
             st.error(
-                "Nao consegui conectar na API. Inicie o backend FastAPI em http://localhost:8000 e tente novamente."
+                f"Nao consegui conectar na API em {API_URL}. Verifique se o backend FastAPI esta online."
             )
         except httpx.HTTPStatusError as exc:
             status.empty()

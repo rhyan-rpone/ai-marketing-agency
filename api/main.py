@@ -12,10 +12,11 @@ Endpoints:
 
 import asyncio
 import json
+import os
 from datetime import datetime
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
@@ -25,6 +26,20 @@ from graph.workflow import agency_graph
 from dotenv import load_dotenv
 
 load_dotenv()
+
+REQUIRED_ENV_VARS = ("OPENAI_API_KEY", "TAVILY_API_KEY")
+
+
+def validate_required_env() -> None:
+    missing = [name for name in REQUIRED_ENV_VARS if not os.getenv(name)]
+    if missing:
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "Variaveis de ambiente obrigatorias ausentes: "
+                f"{', '.join(missing)}. Copie .env.example para .env e configure valores validos."
+            ),
+        )
 
 
 # ── App ────────────────────────────────────────────────────────────────────
@@ -136,6 +151,7 @@ async def generate_campaign(request: CampaignRequest):
 
     Tempo estimado: 30–90 segundos dependendo do LLM e da complexidade.
     """
+    validate_required_env()
     start_time = datetime.utcnow()
 
     try:
@@ -204,6 +220,16 @@ async def generate_campaign_stream(request: CampaignRequest):
             return f"event: {event}\ndata: {json.dumps(data, ensure_ascii=False)}\n\n"
 
         try:
+            missing = [name for name in REQUIRED_ENV_VARS if not os.getenv(name)]
+            if missing:
+                yield send_event("error", {
+                    "message": (
+                        "Variaveis de ambiente obrigatorias ausentes: "
+                        f"{', '.join(missing)}. Copie .env.example para .env e configure valores validos."
+                    )
+                })
+                return
+
             yield send_event("started", {
                 "message": "Pipeline iniciado",
                 "briefing": request.briefing[:100] + "...",
